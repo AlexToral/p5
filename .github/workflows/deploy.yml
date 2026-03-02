@@ -61,7 +61,7 @@ jobs:
     name: CD Production
     needs: release-dev
     runs-on: ubuntu-latest
-    environment: production
+    environment: vars
 
     steps:
       - name: Download artifact
