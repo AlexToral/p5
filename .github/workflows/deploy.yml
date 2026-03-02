@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,8 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -33,8 +34,8 @@ jobs:
           name: dist
           path: dist/
 
-  release:
-    name: CD
+  release-dev:
+    name: CD Dev
     needs: build
     runs-on: ubuntu-latest
     environment: dev
@@ -52,3 +53,23 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy dist/practice4/index.js --name blue-shadow-59f1 --compatibility-date 2026-02-26 --compatibility-flags=nodejs_compat --assets dist/client
+
+  release-prod:
+    name: CD Production
+    needs: release-dev
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy-Prod
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy dist/practice4/index.js --name blue-shadow-59f1-prod --compatibility-date 2026-02-26 --compatibility-flags=nodejs_compat --assets dist/client
